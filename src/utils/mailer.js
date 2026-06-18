@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import mailgen from "mailgen";
 
-const sendEmail = async (options) => {
+export const sendEmail = async (options) => {
   const mailGenerator = new Mailgen({
     theme: "default",
     product: {
@@ -40,7 +40,6 @@ const sendEmail = async (options) => {
     console.error("Error: ", error);
   }
 };
-
 
 // ─── Email Templates ──────────────────────────────────────────────────────────
 
