@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import mailgen from "mailgen";
+import Mailgen from "mailgen";
 
 export const sendEmail = async (options) => {
   const mailGenerator = new Mailgen({
