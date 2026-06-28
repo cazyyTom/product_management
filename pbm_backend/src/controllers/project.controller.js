@@ -65,11 +65,11 @@ export const getUserProjects = asyncHandler(async (req, res) => {
 
 // ─── Create Project ───────────────────────────────────────────────────────────
 export const createProject = asyncHandler(async (req, res) => {
-  const { name, description } = req.body;
-
+  const { name, description, status } = req.body;
   const project = await Project.create({
     name,
     description,
+    status,
     createdBy: req.user._id,
   });
 
@@ -100,11 +100,10 @@ export const getProjectById = asyncHandler(async (req, res) => {
 
 // ─── Update Project ───────────────────────────────────────────────────────────
 export const updateProject = asyncHandler(async (req, res) => {
-  const { name, description } = req.body;
-
+  const { name, description, status } = req.body;
   const project = await Project.findByIdAndUpdate(
     req.project._id,
-    { $set: { name, description } },
+    { $set: { name, description, status } },
     { new: true, runValidators: true },
   );
 

@@ -1,10 +1,3 @@
-/**
- * LoginPage.jsx
- *
- * Uses React 19's useActionState for clean async form state management.
- * On success → navigate to /projects (or the page the user came from).
- */
-
 import { useActionState, useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -13,14 +6,11 @@ import { FormField } from "@/components/ui/FormField";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
 
-// ─── Form action ──────────────────────────────────────────────────────────────
-// useActionState expects: (prevState, formData) => newState
-function createLoginAction(login, navigate, from) {
+function createLoginAction(login) {
   return async function loginAction(_prevState, formData) {
     const email    = formData.get("email")?.toString().trim();
     const password = formData.get("password")?.toString();
 
-    // ── Client-side validation ──────────────────────────────────────────
     const fieldErrors = {};
     if (!email)    fieldErrors.email    = "Email is required.";
     if (!password) fieldErrors.password = "Password is required.";
@@ -28,85 +18,55 @@ function createLoginAction(login, navigate, from) {
       return { ok: false, fieldErrors, message: null };
     }
 
-    // ── API call ────────────────────────────────────────────────────────
     try {
       await login({ email, password });
-      // Redirect happens in the effect below
       return { ok: true, fieldErrors: {}, message: null };
     } catch (err) {
-      const msg = err.message || "Login failed. Please try again.";
-      return { ok: false, fieldErrors: {}, message: msg };
+      return { ok: false, fieldErrors: {}, message: err.message || "Login failed. Please try again." };
     }
   };
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
 export default function LoginPage() {
-  const { login, isAuthenticated } = useAuth();
-  const navigate  = useNavigate();
+  const { login, isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
-  let from = location.state?.from?.pathname || "/projects";
-
-  // Correction: Prevent infinite self-redirection
-  if (from === "/login" || from === "/") {
-    from = "/projects";
-  }
-
-  // Redirect already-authenticated users away
-  useEffect(() => {
-    if (isAuthenticated) navigate(from, { replace: true });
-  }, [isAuthenticated, navigate, from]);
+  const from     = location.state?.from?.pathname || "/projects";
 
   const [showPassword, setShowPassword] = useState(false);
 
   const [state, formAction, isPending] = useActionState(
-    createLoginAction(login, navigate, from),
+    createLoginAction(login),
     { ok: false, fieldErrors: {}, message: null },
   );
 
-  // Navigate after successful login
+  // ── CRITICAL FIX 3 ──────────────────────────────────────────────────────
+  // Single redirect effect: fires when auth state becomes true.
+  // Guard with !isLoading so we don't redirect during bootstrap.
   useEffect(() => {
-    if (state.ok) navigate(from, { replace: true });
-  }, [state.ok, navigate, from]);
+    if (!isLoading && isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate, from]);
 
   return (
-    <AuthLayout
-      title="Welcome back"
-      subtitle="Sign in to your account to continue"
-    >
+    <AuthLayout title="Welcome back" subtitle="Sign in to your account to continue">
       <form action={formAction} noValidate className="space-y-5">
-        {/* Global error */}
-        {state.message && (
-          <Alert variant="error" message={state.message} />
-        )}
+        {state.message && <Alert variant="error" message={state.message} />}
 
-        {/* Email */}
-        <FormField
-          label="Email address"
-          id="email"
-          error={state.fieldErrors?.email}
-        >
+        <FormField label="Email address" id="email" error={state.fieldErrors?.email}>
           <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            autoFocus
+            id="email" name="email" type="email"
+            autoComplete="email" autoFocus
             placeholder="you@example.com"
             className={`input ${state.fieldErrors?.email ? "input-error" : ""}`}
           />
         </FormField>
 
-        {/* Password */}
-        <FormField
-          label="Password"
-          id="password"
-          error={state.fieldErrors?.password}
-        >
+        <FormField label="Password" id="password" error={state.fieldErrors?.password}>
           <div className="relative">
             <input
-              id="password"
-              name="password"
+              id="password" name="password"
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               placeholder="••••••••"
@@ -132,39 +92,23 @@ export default function LoginPage() {
           </div>
         </FormField>
 
-        {/* Forgot password */}
         <div className="flex justify-end">
-          <Link
-            to="/forgot-password"
-            className="text-sm text-brand-600 hover:text-brand-700 hover:underline"
-          >
+          <Link to="/forgot-password" className="text-sm text-brand-600 hover:text-brand-700 hover:underline">
             Forgot your password?
           </Link>
         </div>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={isPending}
-          className="btn-primary btn-lg w-full"
-        >
+        <button type="submit" disabled={isPending} className="btn-primary btn-lg w-full">
           {isPending ? (
-            <>
-              <Spinner size="sm" className="text-white" />
-              Signing in…
-            </>
+            <><Spinner size="sm" className="text-white" /> Signing in…</>
           ) : (
             "Sign in"
           )}
         </button>
 
-        {/* Register link */}
         <p className="text-center text-sm text-gray-500">
           Don&apos;t have an account?{" "}
-          <Link
-            to="/register"
-            className="font-medium text-brand-600 hover:text-brand-700 hover:underline"
-          >
+          <Link to="/register" className="font-medium text-brand-600 hover:text-brand-700 hover:underline">
             Create one
           </Link>
         </p>

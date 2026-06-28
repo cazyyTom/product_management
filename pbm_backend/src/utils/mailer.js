@@ -6,7 +6,7 @@ export const sendEmail = async (options) => {
   const mailGenerator = new Mailgen({
     theme: "default",
     product: {
-      name: "Project Camp",
+      name: "Product Basecamp",
       link: process.env.CLIENT_URL || "http://localhost:3000",
     },
   });
@@ -47,11 +47,11 @@ export const sendEmail = async (options) => {
 // mailgenContent is passed directly to mailGenerator.generate()
 
 export const emailVerificationMailgenContent = (username, verificationUrl) => ({
-  subject: "Verify your Project Camp email",
+  subject: "Verify your Product Basecamp email",
   mailgenContent: {
     body: {
       name: username,
-      intro: "Welcome to Project Camp! We're excited to have you on board.",
+      intro: "Welcome to Product Basecamp! We're excited to have you on board.",
       action: {
         instructions:
           "Please click the button below to verify your email address. This link expires in 24 hours.",
@@ -62,13 +62,13 @@ export const emailVerificationMailgenContent = (username, verificationUrl) => ({
         },
       },
       outro:
-        "If you didn't create a Project Camp account, you can safely ignore this email.",
+        "If you didn't create a Product Basecamp account, you can safely ignore this email.",
     },
   },
 });
 
 export const forgotPasswordTemplate = (username, resetUrl) => ({
-  subject: "Reset your Project Camp password",
+  subject: "Reset your Product Basecamp password",
   mailgenContent: {
     body: {
       name: username,

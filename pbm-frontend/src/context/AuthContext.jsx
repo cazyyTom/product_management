@@ -1,16 +1,3 @@
-/**
- * AuthContext.jsx
- *
- * Central authentication state for the entire app.
- *
- * Responsibilities:
- *  - Bootstrap: on first mount, call /auth/current-user to restore session
- *    (the HttpOnly refreshToken cookie keeps the user logged in across reloads).
- *  - Expose: user, isAuthenticated, isLoading, login(), register(), logout()
- *  - Listen to the "auth:logout" event fired by the Axios interceptor when a
- *    token refresh fails, so we can clear state without a circular import.
- */
-
 import {
   createContext,
   useContext,
@@ -26,33 +13,45 @@ import {
   getCurrentUser,
 } from "@/api/auth.api";
 import { setAccessToken, clearAccessToken } from "@/api/axiosInstance";
+import axios from "axios";
 
-// ─── Context ──────────────────────────────────────────────────────────────────
 const AuthContext = createContext(null);
 
-// ─── Provider ─────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }) {
-  const [user, setUser]         = useState(null);
-  const [isLoading, setIsLoading] = useState(true); // true during bootstrap
-  const [error, setError]       = useState(null);
+  const [user, setUser]           = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError]         = useState(null);
+  const bootstrapped              = useRef(false);
 
-  // Prevent double-bootstrap in React 19 StrictMode double-invoke
-  const bootstrapped = useRef(false);
-
-  // ── Bootstrap: restore session on page load ──────────────────────────────
+  // ── Bootstrap ─────────────────────────────────────────────────────────────
+  // On every page load the in-memory accessToken is gone.
+  // STEP 1: Call /refresh-token with the HttpOnly cookie to get a new accessToken.
+  // STEP 2: Use that token to call /current-user.
+  // If either fails → user is not logged in → stay on null (ProtectedRoute
+  //   will redirect to /login cleanly, no hard reload).
   useEffect(() => {
     if (bootstrapped.current) return;
     bootstrapped.current = true;
 
     (async () => {
       try {
-        // The refresh-token cookie is HttpOnly, so we can't read it, but the
-        // browser will send it automatically. If it's valid the server issues
-        // a new accessToken and we can fetch the current user.
-        const res = await getCurrentUser();
-        setUser(res.data.data.user);
+        // Step 1 — get a fresh access token from the refresh cookie
+        const refreshRes = await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1"}/auth/refresh-token`,
+          {},
+          { withCredentials: true },
+        );
+
+        const newToken = refreshRes.data?.data?.accessToken;
+        if (!newToken) throw new Error("No token in refresh response");
+        setAccessToken(newToken);
+
+        // Step 2 — now fetch the user (token is in memory, interceptor will attach it)
+        const userRes = await getCurrentUser();
+        setUser(userRes.data?.data?.user ?? null);
       } catch {
-        // No valid session — user stays null (not authenticated).
+        // No valid session — not logged in. This is normal, not an error.
+        clearAccessToken();
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -84,7 +83,7 @@ export function AuthProvider({ children }) {
   const register = useCallback(async ({ username, email, password }) => {
     setError(null);
     const res = await registerUser({ username, email, password });
-    return res.data; // caller shows the "verify email" message
+    return res.data;
   }, []);
 
   // ── Logout ────────────────────────────────────────────────────────────────
@@ -92,7 +91,7 @@ export function AuthProvider({ children }) {
     try {
       await logoutUser();
     } catch {
-      // Swallow – we clear client state regardless
+      // Swallow – clear client state regardless
     } finally {
       clearAccessToken();
       setUser(null);
@@ -107,13 +106,12 @@ export function AuthProvider({ children }) {
     login,
     register,
     logout,
-    setUser, // exposed so profile update pages can patch the user object
+    setUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");

@@ -1,4 +1,4 @@
-# PBM Basecamp — Project Management Application
+# PBM — Product Basecamp Management 
 
 A full-stack project management platform for teams to track tasks, collaborate on notes, and manage project members with role-based access control.
 
@@ -892,4 +892,4 @@ For single-page-app routing to work, configure your host to serve `index.html` f
 
 ---
 
-*Built by Devesh Tomar — PBM Basecamp v1.0*
+*Built by Devesh Tanwar — Product Basecamp Management v1.0*
