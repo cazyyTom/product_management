@@ -1,18 +1,19 @@
 import nodemailer from "nodemailer";
 import Mailgen from "mailgen";
 
+// ─── Send Email ───────────────────────────────────────────────────────────────
 export const sendEmail = async (options) => {
   const mailGenerator = new Mailgen({
     theme: "default",
     product: {
-      name: "Task Manager",
-      link: "https://taskmanagelink.com",
+      name: "Project Camp",
+      link: process.env.CLIENT_URL || "http://localhost:3000",
     },
   });
 
-  const emailTextual = mailGenerator.generatePlaintext(options.mailgenContent);
-
+  // options.mailgenContent is a proper Mailgen body object
   const emailHtml = mailGenerator.generate(options.mailgenContent);
+  const emailTextual = mailGenerator.generatePlaintext(options.mailgenContent);
 
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -27,60 +28,63 @@ export const sendEmail = async (options) => {
     from: process.env.EMAIL_FROM,
     to: options.email,
     subject: options.subject,
-    text: emailTextual,
     html: emailHtml,
+    text: emailTextual,
   };
 
   try {
     await transporter.sendMail(mail);
   } catch (error) {
     console.error(
-      "Email service failed siliently. Make sure that you have provided your MAILTRAP credentials in the .env file",
+      "Email service failed silently. Make sure you have provided your SMTP credentials in the .env file",
     );
     console.error("Error: ", error);
   }
 };
 
 // ─── Email Templates ──────────────────────────────────────────────────────────
+// Each template returns { subject, mailgenContent }
+// mailgenContent is passed directly to mailGenerator.generate()
 
-export const emailVerificationTemplate = (username, verificationUrl) => ({
+export const emailVerificationMailgenContent = (username, verificationUrl) => ({
   subject: "Verify your Project Camp email",
-  html: `
-    <div style="font-family:sans-serif;max-width:600px;margin:auto;padding:24px">
-      <h2>Welcome to Project Camp, ${username}!</h2>
-      <p>Please verify your email address by clicking the button below.
-         This link expires in <strong>24 hours</strong>.</p>
-      <a href="${verificationUrl}"
-         style="display:inline-block;padding:12px 24px;background:#4F46E5;color:#fff;
-                border-radius:6px;text-decoration:none;font-weight:600">
-        Verify Email
-      </a>
-      <p style="margin-top:24px;color:#6b7280;font-size:13px">
-        Or copy this URL into your browser:<br/>
-        <a href="${verificationUrl}">${verificationUrl}</a>
-      </p>
-    </div>
-  `,
+  mailgenContent: {
+    body: {
+      name: username,
+      intro: "Welcome to Project Camp! We're excited to have you on board.",
+      action: {
+        instructions:
+          "Please click the button below to verify your email address. This link expires in 24 hours.",
+        button: {
+          color: "#4F46E5",
+          text: "Verify Email",
+          link: verificationUrl,
+        },
+      },
+      outro:
+        "If you didn't create a Project Camp account, you can safely ignore this email.",
+    },
+  },
 });
 
 export const forgotPasswordTemplate = (username, resetUrl) => ({
   subject: "Reset your Project Camp password",
-  html: `
-    <div style="font-family:sans-serif;max-width:600px;margin:auto;padding:24px">
-      <h2>Password Reset Request</h2>
-      <p>Hi ${username},</p>
-      <p>Someone requested a password reset for your Project Camp account.
-         Click the button below to reset it. This link expires in <strong>24 hours</strong>.</p>
-      <a href="${resetUrl}"
-         style="display:inline-block;padding:12px 24px;background:#DC2626;color:#fff;
-                border-radius:6px;text-decoration:none;font-weight:600">
-        Reset Password
-      </a>
-      <p style="margin-top:24px;color:#6b7280;font-size:13px">
-        If you did not request this, you can safely ignore this email.<br/>
-        Or copy this URL into your browser:<br/>
-        <a href="${resetUrl}">${resetUrl}</a>
-      </p>
-    </div>
-  `,
+  mailgenContent: {
+    body: {
+      name: username,
+      intro:
+        "You have received this email because a password reset request was made for your account.",
+      action: {
+        instructions:
+          "Click the button below to reset your password. This link expires in 24 hours.",
+        button: {
+          color: "#DC2626",
+          text: "Reset Password",
+          link: resetUrl,
+        },
+      },
+      outro:
+        "If you did not request a password reset, no further action is required. Your account is safe.",
+    },
+  },
 });

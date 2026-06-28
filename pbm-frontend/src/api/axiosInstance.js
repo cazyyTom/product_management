@@ -27,7 +27,8 @@ export const setAccessToken = (token) => {
 export const getAccessToken = () => _accessToken;
 
 export const clearAccessToken = () => {
-  _accessToken = null;
+  localStorage.removeItem("token");
+  // Let AuthContext handle the state update and React Router handle the redirect
 };
 
 // ─── Axios instance ────────────────────────────────────────────────────────
@@ -78,9 +79,12 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Only attempt refresh on 401, and only once per request (_retry flag).
-    if (error.response?.status !== 401 || originalRequest._retry) {
-      return Promise.reject(normaliseError(error));
-    }
+   if (
+     error.response?.status === 401 &&
+     !error.config.url.includes("/auth/current-user")
+   ) {
+     window.dispatchEvent(new Event("auth:logout"));
+   }
 
     // Mark this request so we don't retry more than once.
     originalRequest._retry = true;
@@ -118,15 +122,14 @@ api.interceptors.response.use(
       originalRequest.headers.Authorization = `Bearer ${newToken}`;
       return api(originalRequest);
     } catch (refreshError) {
-      // Refresh failed → clear token and redirect to login.
       processQueue(refreshError, null);
-      clearAccessToken();
 
-      // Emit a custom event so the AuthContext can react (clear user state).
-      window.dispatchEvent(new CustomEvent("auth:logout"));
+      if (refreshError.response?.status === 401) {
+        clearAccessToken();
+        window.dispatchEvent(new CustomEvent("auth:logout"));
+        window.location.href = "/login";
+      }
 
-      // Hard redirect to login page.
-      window.location.href = "/login";
       return Promise.reject(normaliseError(refreshError));
     } finally {
       _isRefreshing = false;

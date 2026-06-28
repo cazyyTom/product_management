@@ -44,8 +44,13 @@ function createLoginAction(login, navigate, from) {
 export default function LoginPage() {
   const { login, isAuthenticated } = useAuth();
   const navigate  = useNavigate();
-  const location  = useLocation();
-  const from      = location.state?.from?.pathname || "/projects";
+  const location = useLocation();
+  let from = location.state?.from?.pathname || "/projects";
+
+  // Correction: Prevent infinite self-redirection
+  if (from === "/login" || from === "/") {
+    from = "/projects";
+  }
 
   // Redirect already-authenticated users away
   useEffect(() => {

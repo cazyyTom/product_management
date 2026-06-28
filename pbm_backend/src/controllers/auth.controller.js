@@ -7,7 +7,7 @@ import Mailgen from "mailgen";
 import { generateAccessAndRefreshTokens } from "../utils/generateTokens.js";
 import {
   sendEmail,
-  emailVerificationTemplate,
+  emailVerificationMailgenContent,
   forgotPasswordTemplate,
 } from "../utils/mailer.js";
 import {
@@ -41,13 +41,14 @@ export const registerUser = asyncHandler(async (req, res) => {
   await user.save({ validateBeforeSave: false });
 
   const verificationUrl = `${process.env.APP_URL}/api/v1/auth/verify-email/${unhashedToken}`;
-  const { subject, html } = emailVerificationTemplate(
-    username,
+
+  const { subject, mailgenContent } = emailVerificationMailgenContent(
+    user.username,
     verificationUrl,
   );
-  await sendEmail({ to: email, subject, html });
+  await sendEmail({ email: user.email, subject, mailgenContent });
 
-  const createdUser = await User.findById(user._id).select(
+  const safeUser = await User.findById(user._id).select(
     "-password -refreshToken -emailVerificationToken -forgotPasswordToken",
   );
 
@@ -56,7 +57,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         201,
-        { user: createdUser },
+        { user: safeUser },
         "Registration successful. Please verify your email.",
       ),
     );
@@ -107,12 +108,13 @@ export const resendEmailVerification = asyncHandler(async (req, res) => {
   user.emailVerificationExpiry = tokenExpiry;
   await user.save({ validateBeforeSave: false });
 
-  const verificationUrl = `${process.env.APP_URL}/api/v1/auth/verify-email/${unhashedToken}`;
-  const { subject, html } = emailVerificationTemplate(
+  const resetUrl = `${process.env.CLIENT_URL}/reset-password/${unhashedToken}`;
+
+  const { subject, mailgenContent } = forgotPasswordTemplate(
     user.username,
-    verificationUrl,
+    resetUrl,
   );
-  await sendEmail({ to: user.email, subject, html });
+  await sendEmail({ email: user.email, subject, mailgenContent });
 
   return res
     .status(200)
@@ -259,7 +261,6 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
   const user = await User.findOne({ email });
-  // Always respond 200 to avoid user enumeration
   if (!user) {
     return res
       .status(200)
@@ -280,8 +281,11 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   await user.save({ validateBeforeSave: false });
 
   const resetUrl = `${process.env.CLIENT_URL}/reset-password/${unhashedToken}`;
-  const { subject, html } = forgotPasswordTemplate(user.username, resetUrl);
-  await sendEmail({ to: email, subject, html });
+  const { subject, mailgenContent } = forgotPasswordTemplate(
+    user.username,
+    resetUrl,
+  );
+  await sendEmail({ email: user.email, subject, mailgenContent });
 
   return res
     .status(200)
