@@ -40,9 +40,7 @@ export default function LoginPage() {
     { ok: false, fieldErrors: {}, message: null },
   );
 
-  // ── CRITICAL FIX 3 ──────────────────────────────────────────────────────
-  // Single redirect effect: fires when auth state becomes true.
-  // Guard with !isLoading so we don't redirect during bootstrap.
+
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       navigate(from, { replace: true });
