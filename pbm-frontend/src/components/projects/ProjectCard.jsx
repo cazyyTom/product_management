@@ -30,7 +30,7 @@ function accentColour(name = "") {
 export function ProjectCard({ project, onEdit, onDelete }) {
   const {
     _id, name, description, status,
-    createdAt, members,
+    createdAt, memberCount, members,
   } = project;
 
   const badgeCls = statusStyles[status] ?? "badge bg-gray-100 text-gray-700";
@@ -88,7 +88,7 @@ export function ProjectCard({ project, onEdit, onDelete }) {
         {/* Footer */}
         <div className="mt-auto flex items-center justify-between pt-4 text-xs text-gray-400">
           <span>
-            {members?.length ?? 0} member{members?.length !== 1 ? "s" : ""}
+            {memberCount ?? members?.length ?? 0} member{members?.length !== 1 ? "s" : ""}
           </span>
           <span>
             {createdAt

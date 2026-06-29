@@ -8,30 +8,30 @@ import { ApiError } from "../utils/ApiError.js";
 const errorHandler = (err, req, res, next) => {
   let error = err;
 
-  // Normalise non-ApiError instances
-  if (!(error instanceof ApiError)) {
+  // ── 1. MongoDB duplicate key — check FIRST before normalisation ──────────
+  if (err.code === 11000) {
+    const rawField = Object.keys(err.keyValue || {})[0]; // e.g. "username.type"
+
+    // Sanitize the field name by removing anything after a dot
+    const cleanField = rawField ? rawField.split(".")[0] : "Field";
+
+    const message = `${cleanField.charAt(0).toUpperCase() + cleanField.slice(1)} is already taken.`;
+    error = new ApiError(409, message);
+  }
+
+  // ── 2. Normalise non-ApiError instances ──────────────────────────────────
+  else if (!(error instanceof ApiError)) {
     const statusCode =
       error.statusCode || (error.name === "ValidationError" ? 400 : 500);
     const message = error.message || "Something went wrong";
     error = new ApiError(statusCode, message, error?.errors || [], err.stack);
   }
 
-  // Mongoose duplicate key error
-  if (err.code === 11000) {
-    const field = Object.keys(err.keyPattern || {}).join(", ");
-    error = new ApiError(409, `Duplicate value for field(s): ${field}`);
-  }
-
-  // Mongoose cast error (invalid ObjectId)
-  if (err.name === "CastError") {
-    error = new ApiError(400, `Invalid value for field: ${err.path}`);
-  }
-
+  // ── 3. Send response ──────────────────────────────────────────────────────
   const response = {
     statusCode: error.statusCode,
     message: error.message,
     success: false,
-    ...(error.errors?.length && { errors: error.errors }),
     ...(process.env.NODE_ENV === "development" && { stack: error.stack }),
   };
 
