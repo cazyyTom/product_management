@@ -11,13 +11,14 @@
  */
 
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import api from "@/api/axiosInstance";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Spinner } from "@/components/ui/Spinner";
 
 export default function VerifyEmailPage() {
   const { verificationToken } = useParams();
+  const navigate = useNavigate();
   const [status, setStatus] = useState("loading"); // loading | success | error
   const [message, setMessage] = useState("");
 
@@ -30,12 +31,20 @@ export default function VerifyEmailPage() {
 
     api
       .get(`/auth/verify-email/${verificationToken}`)
-      .then(() => setStatus("success"))
+      .then(() => {
+        setStatus("success");
+        navigate("/login", {
+          replace: true,
+          state: { alertMessage: "Email verified, Login now" },
+        });
+      })
       .catch((err) => {
         setStatus("error");
-        setMessage(err.message || "Verification failed. The link may have expired.");
+        setMessage(
+          err.message || "Verification failed. The link may have expired.",
+        );
       });
-  }, [verificationToken]);
+  }, [verificationToken, navigate]);
 
   return (
     <AuthLayout>

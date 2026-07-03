@@ -40,7 +40,7 @@ export const registerUser = asyncHandler(async (req, res) => {
   user.emailVerificationExpiry = tokenExpiry;
   await user.save({ validateBeforeSave: false });
 
-  const verificationUrl = `${process.env.APP_URL}/api/v1/auth/verify-email/${unhashedToken}`;
+ const verificationUrl = `${process.env.CLIENT_URL}/verify-email/${unhashedToken}`;
 
   const { subject, mailgenContent } = emailVerificationMailgenContent(
     user.username,
