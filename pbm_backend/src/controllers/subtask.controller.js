@@ -38,9 +38,7 @@ export const createSubTask = asyncHandler(async (req, res) => {
     );
 });
 
-// ─── Update Subtask ───────────────────────────────────────────────────────────
-// Admin / Project Admin: can update title and isCompleted
-// Member: can only toggle isCompleted
+
 export const updateSubTask = asyncHandler(async (req, res) => {
   const { subTaskId } = req.params;
   const { title, isCompleted } = req.body;

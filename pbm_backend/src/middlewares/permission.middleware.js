@@ -4,11 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { UserRolesEnum } from "../config/constants.js";
 
-/**
- * Resolves the project membership for req.user on the given :projectId param.
- * Attaches req.projectMember and req.userRole to the request.
- * Must run AFTER verifyJWT and on routes that have :projectId.
- */
+
 export const getProjectRole = asyncHandler(async (req, _, next) => {
   const { projectId } = req.params;
 

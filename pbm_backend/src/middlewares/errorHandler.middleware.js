@@ -1,10 +1,6 @@
 import { ApiError } from "../utils/ApiError.js";
 
-/**
- * Express global error handler.
- * Must have 4 parameters so Express recognises it as an error handler.
- */
-// eslint-disable-next-line no-unused-vars
+
 const errorHandler = (err, req, res, next) => {
   let error = err;
 
@@ -12,7 +8,7 @@ const errorHandler = (err, req, res, next) => {
   if (err.code === 11000) {
     const rawField = Object.keys(err.keyValue || {})[0]; // e.g. "username.type"
 
-    // Sanitize the field name by removing anything after a dot
+    
     const cleanField = rawField ? rawField.split(".")[0] : "Field";
 
     const message = `${cleanField.charAt(0).toUpperCase() + cleanField.slice(1)} is already taken.`;
