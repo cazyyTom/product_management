@@ -8,11 +8,11 @@ import { Spinner } from "@/components/ui/Spinner";
 
 function createLoginAction(login) {
   return async function loginAction(_prevState, formData) {
-    const email    = formData.get("email")?.toString().trim();
+    const email = formData.get("email")?.toString().trim();
     const password = formData.get("password")?.toString();
 
     const fieldErrors = {};
-    if (!email)    fieldErrors.email    = "Email is required.";
+    if (!email) fieldErrors.email = "Email is required.";
     if (!password) fieldErrors.password = "Password is required.";
     if (Object.keys(fieldErrors).length) {
       return { ok: false, fieldErrors, message: null };
@@ -22,7 +22,11 @@ function createLoginAction(login) {
       await login({ email, password });
       return { ok: true, fieldErrors: {}, message: null };
     } catch (err) {
-      return { ok: false, fieldErrors: {}, message: err.message || "Login failed. Please try again." };
+      return {
+        ok: false,
+        fieldErrors: {},
+        message: err.message || "Login failed. Please try again.",
+      };
     }
   };
 }
@@ -31,16 +35,35 @@ export default function LoginPage() {
   const { login, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [verifiedMessage] = useState(location.state?.alertMessage || null);
-  const from     = location.state?.from?.pathname || "/projects";
+  const from = location.state?.from?.pathname || "/projects";
 
+  const [verifiedMessage] = useState(location.state?.alertMessage || null);
   const [showPassword, setShowPassword] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false); // ✅ separate state for demo
+  const [demoError, setDemoError] = useState(null);
 
   const [state, formAction, isPending] = useActionState(
     createLoginAction(login),
     { ok: false, fieldErrors: {}, message: null },
   );
 
+  // ✅ Fixed: uses login from useAuth + navigate from React Router
+  const handleDemoLogin = async () => {
+    setDemoLoading(true);
+    setDemoError(null);
+
+    try {
+      await login({
+        email: "demo@example.com",
+        password: "Password@1234",
+      });
+      // navigation is handled by the useEffect below
+    } catch (error) {
+      setDemoError(error.message || "Demo login failed. Please try again.");
+    } finally {
+      setDemoLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -58,6 +81,7 @@ export default function LoginPage() {
           <Alert variant="success" message={verifiedMessage} />
         )}
         {state.message && <Alert variant="error" message={state.message} />}
+        {demoError && <Alert variant="error" message={demoError} />}
 
         <FormField
           label="Email address"
@@ -154,6 +178,22 @@ export default function LoginPage() {
             </>
           ) : (
             "Sign in"
+          )}
+        </button>
+
+        {/* ✅ type="button" prevents form submission */}
+        <button
+          type="button"
+          onClick={handleDemoLogin}
+          disabled={demoLoading}
+          className="btn-primary btn-lg w-full"
+        >
+          {demoLoading ? (
+            <>
+              <Spinner size="sm" className="text-white" /> Logging in...
+            </>
+          ) : (
+            "Use Demo Account"
           )}
         </button>
 
