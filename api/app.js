@@ -5,14 +5,14 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 // Routes
-import authRoutes from "./routes/auth.routes.js";
-import projectRoutes from "./routes/project.routes.js";
-import taskRoutes from "./routes/task.routes.js";
-import noteRoutes from "./routes/note.routes.js";
-import healthCheckRoutes from "./routes/healthcheck.routes.js";
+import authRoutes from "../server/routes/auth.routes.js";
+import projectRoutes from "../server/routes/project.routes.js";
+import taskRoutes from "../server/routes/task.routes.js";
+import noteRoutes from "../server/routes/note.routes.js";
+import healthCheckRoutes from "../server/routes/healthcheck.routes.js";
 
 // Error handler
-import errorHandler from "./middlewares/errorHandler.middleware.js";
+import errorHandler from "../server/middlewares/errorHandler.middleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

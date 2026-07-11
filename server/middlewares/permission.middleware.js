@@ -4,7 +4,6 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { UserRolesEnum } from "../config/constants.js";
 
-
 export const getProjectRole = asyncHandler(async (req, _, next) => {
   const { projectId } = req.params;
 
