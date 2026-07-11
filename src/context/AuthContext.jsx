@@ -37,7 +37,7 @@ export function AuthProvider({ children }) {
       try {
         // Step 1 — get a fresh access token from the refresh cookie
         const refreshRes = await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1"}/auth/refresh-token`,
+          `${import.meta.env.VITE_API_BASE_URL || "/api/v1"}/auth/refresh-token`,
           {},
           { withCredentials: true },
         );

@@ -13,9 +13,12 @@ const imagesDir = path.resolve(__dirname, "../public/images");
 if (!fs.existsSync(imagesDir)) {
   fs.mkdirSync(imagesDir, { recursive: true });
 }
+if(process.env.NODE_ENV !== "production") {
 
-const PORT = process.env.PORT || 8000;
-
+  const PORT = process.env.PORT || 8000;
+}
+// Export the app for Vercel
+export default app;
 connectDB()
   .then(() => {
     app.on("error", (err) => {
