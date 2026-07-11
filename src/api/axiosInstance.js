@@ -9,7 +9,7 @@ export const clearAccessToken = () => { _accessToken = null; };
 
 // ─── Axios instance ────────────────────────────────────────────────────────
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "/api/v1",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "/",
   withCredentials: true,
   timeout: 15_000,
   headers: { "Content-Type": "application/json" },
@@ -81,7 +81,7 @@ api.interceptors.response.use(
 
     try {
       const { data } = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL || "/api/v1"}/auth/refresh-token`,
+        `${import.meta.env.VITE_API_BASE_URL || "/"}/auth/refresh-token`,
         {},
         { withCredentials: true },
       );
