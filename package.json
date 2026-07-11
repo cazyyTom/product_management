@@ -10,12 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "axios": "^1.18.1",
-    "prettier": "^3.9.3",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "react-router-dom": "^7.18.0",
-     "bcrypt": "^6.0.0",
+    "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
@@ -25,18 +22,21 @@
     "mailgen": "^2.0.34",
     "mongoose": "^9.7.1",
     "multer": "^2.2.0",
-    "nodemailer": "^9.0.1"
-  
+    "nodemailer": "^9.0.1",
+    "prettier": "^3.9.3",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.18.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
     "autoprefixer": "^10.5.2",
+    "nodemon": "^3.1.14",
     "oxlint": "^1.69.0",
     "postcss": "^8.5.15",
     "tailwindcss": "^3.4.19",
-    "vite": "^8.1.0",
-    "nodemon": "^3.1.14"
+    "vite": "^8.1.0"
   }
 }
